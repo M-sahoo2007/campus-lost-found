@@ -132,7 +132,7 @@ export default function Guard() {
                         <img
                           src={API.getImageUrl(item.filename || "")}
                           alt={item.description}
-                          onError={(e) => { e.target.src = "https://via.placeholder.com/300?text=Gate+Intake"; }}
+                          onError={(e) => { e.target.src = "/placeholder.svg"; }}
                         />
                       </div>
                       <div className="card-body">
@@ -210,7 +210,7 @@ export default function Guard() {
                         <tr key={idx}>
                           <td>
                             <img src={API.getImageUrl(item.filename)} alt="" style={{ width: 44, height: 44, borderRadius: "var(--radius-md)", objectFit: "cover", border: "1px solid var(--border)" }}
-                              onError={(e) => { e.target.src = "https://via.placeholder.com/50?text=Img"; }} />
+                              onError={(e) => { e.target.src = "/placeholder.svg"; }} />
                           </td>
                           <td>
                             <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{item.description || "N/A"}</div>
@@ -253,7 +253,7 @@ export default function Guard() {
                 <div className="flex gap-4" style={{ padding: "var(--space-3)", background: "var(--bg-surface)", borderRadius: "var(--radius-xl)", border: "1px solid var(--border-subtle)" }}>
                   <div style={{ width: 56, height: 56, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src={API.getImageUrl(selectedItem.filename)} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }}
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/60?text=Item"; }} />
+                      onError={(e) => { e.target.src = "/placeholder.svg"; }} />
                   </div>
                   <div>
                     <span className="badge badge-primary mb-1">{selectedItem.category}</span>
@@ -301,22 +301,91 @@ export default function Guard() {
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
-        <button onClick={() => setActiveTab("inventory")} className={`nav-item ${activeTab === "inventory" ? "active" : ""}`}>
-          <i className="fas fa-boxes-stacked"></i>
-          <span>Inventory</span>
-        </button>
-        <button onClick={() => setActiveTab("intake")} className={`nav-item ${activeTab === "intake" ? "active" : ""}`}>
-          <i className="fas fa-plus-circle"></i>
-          <span>Intake</span>
-        </button>
-        <button onClick={() => setActiveTab("logs")} className={`nav-item ${activeTab === "logs" ? "active" : ""}`}>
-          <i className="fas fa-clipboard-check"></i>
-          <span>Logs</span>
-        </button>
-        <button onClick={() => navigate("/")} className="nav-item">
-          <i className="fas fa-circle-arrow-left"></i>
-          <span>Exit</span>
-        </button>
+        {/* Brand Logo - Desktop Only */}
+        <div className="sidebar-brand">
+          <div style={{
+            background: "linear-gradient(135deg, var(--primary), #a855f7)",
+            color: "white",
+            width: 32,
+            height: 32,
+            borderRadius: "var(--radius-md)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "0.85rem",
+            boxShadow: "0 4px 12px var(--primary-glow)",
+          }}>
+            <i className="fas fa-search-plus"></i>
+          </div>
+          <h1 style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: "1.1rem",
+            fontWeight: 800,
+            margin: 0,
+            background: "linear-gradient(135deg, var(--text-primary), var(--primary-light))",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}>
+            404 Found
+          </h1>
+        </div>
+
+        {/* Navigation Links */}
+        <div className="sidebar-nav-links">
+          <button onClick={() => setActiveTab("inventory")} className={`nav-item ${activeTab === "inventory" ? "active" : ""}`}>
+            <i className="fas fa-boxes-stacked"></i>
+            <span>Inventory</span>
+          </button>
+          <button onClick={() => setActiveTab("intake")} className={`nav-item ${activeTab === "intake" ? "active" : ""}`}>
+            <i className="fas fa-plus-circle"></i>
+            <span>Intake</span>
+          </button>
+          <button onClick={() => setActiveTab("logs")} className={`nav-item ${activeTab === "logs" ? "active" : ""}`}>
+            <i className="fas fa-clipboard-check"></i>
+            <span>Logs</span>
+          </button>
+          <button onClick={() => navigate("/")} className="nav-item">
+            <i className="fas fa-circle-arrow-left"></i>
+            <span>Exit Staff View</span>
+          </button>
+        </div>
+
+        {/* User Profile & Logout - Desktop Only */}
+        <div className="sidebar-user">
+          <div className="flex items-center gap-3" style={{ padding: "4px 0" }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: "var(--radius-md)",
+              background: "linear-gradient(135deg, var(--primary), #a855f7)",
+              color: "white",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              G
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <span style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "0.8rem", display: "block", lineHeight: 1.2 }}>
+                Security Staff
+              </span>
+              <span style={{ fontSize: "0.6rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginTop: 2 }}>
+                Guard Panel
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => { API.logout(); navigate("/login"); }}
+            className="btn-danger btn-full"
+            style={{ padding: "8px", fontSize: "0.75rem", marginTop: "var(--space-2)" }}
+          >
+            <i className="fas fa-sign-out-alt"></i>
+            <span>Sign Out</span>
+          </button>
+        </div>
       </nav>
     </div>
   );

@@ -36,13 +36,13 @@ export default function SearchBar({ onImageSearch, onTextSearch, loading }) {
             onClick={() => setSearchMode("image")}
             className={searchMode === "image" ? "active" : ""}
           >
-            <i className="fas fa-image mr-1"></i> Search by Photo
+            <i className="fas fa-image mr-1"></i> <span className="sm-hidden">Search by </span>Photo
           </button>
           <button
             onClick={() => setSearchMode("text")}
             className={searchMode === "text" ? "active" : ""}
           >
-            <i className="fas fa-keyboard mr-1"></i> Search by Description
+            <i className="fas fa-keyboard mr-1"></i> <span className="sm-hidden">Search by </span>Description
           </button>
         </div>
 

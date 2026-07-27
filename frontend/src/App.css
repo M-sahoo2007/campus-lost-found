@@ -625,6 +625,7 @@ select {
   min-height: 100dvh;
   background: var(--bg-base);
   padding-bottom: 80px;
+  overflow-x: hidden;
 }
 .page-content {
   max-width: 1200px;
@@ -759,7 +760,7 @@ select {
 
 /* ---- Overflow ---- */
 .overflow-hidden { overflow: hidden; }
-.overflow-x-auto { overflow-x: auto; }
+.overflow-x-auto { overflow-x: auto; display: block; width: 100%; -webkit-overflow-scrolling: touch; }
 .overflow-y-auto { overflow-y: auto; }
 
 /* ---- Misc ---- */
@@ -974,6 +975,7 @@ select {
   font-size: 1.15rem;
 }
 .stat-label {
+  display: block;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -981,6 +983,7 @@ select {
   color: var(--text-muted);
 }
 .stat-value {
+  display: block;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 2rem;
   font-weight: 700;
@@ -1030,6 +1033,7 @@ select {
   padding: 4px;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-subtle);
+  width: 100%;
 }
 .tab-switcher button {
   flex: 1;
@@ -1041,6 +1045,10 @@ select {
   color: var(--text-muted);
   border: none;
   transition: all var(--transition-base);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tab-switcher button:hover { color: var(--text-secondary); transform: none; }
 .tab-switcher button.active {
@@ -1303,3 +1311,290 @@ input[type="checkbox"] {
   letter-spacing: 0.05em;
 }
 .item-img-container .item-no-img i { font-size: 2rem; opacity: 0.4; }
+
+/* ---- Decorative Blobs ---- */
+.sidebar-brand, .sidebar-user {
+  display: none;
+}
+.sidebar-nav-links {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 767px) {
+  html {
+    font-size: 14px !important;
+  }
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.3rem !important; }
+  h3 { font-size: 1.15rem !important; }
+  h4 { font-size: 1.05rem !important; }
+  
+  /* Section headers and main cards adjustments on mobile */
+  .section-header h2, .section-header h3 {
+    font-size: 1.15rem !important;
+  }
+  
+  /* Welcome back title clamp adjustment */
+  .gradient-text {
+    font-size: 1.4rem !important;
+  }
+
+  /* Make bottom navigation bar clean icon-only on mobile */
+  .nav-item span, .nav-fab span {
+    display: none !important;
+  }
+  .bottom-nav {
+    height: 58px !important;
+  }
+  .nav-fab-circle {
+    width: 46px !important;
+    height: 46px !important;
+    margin-top: -16px !important;
+  }
+  .nav-item i {
+    font-size: 1.35rem !important;
+  }
+}
+
+/* ---- Responsive Floating Bottom Nav Dock & Grid Layouts ---- */
+@media (min-width: 768px) {
+  /* Page padding to prevent bottom nav coverage */
+  .page {
+    padding-bottom: 90px !important;
+  }
+  
+  /* Centered content */
+  .page-content {
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    padding: var(--space-8) var(--space-6) !important;
+  }
+
+  /* Centered Floating Dock Navigation */
+  .bottom-nav {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 100% !important;
+    max-width: 640px !important;
+    height: 64px !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    border: 1px solid var(--border) !important;
+    border-bottom: none !important;
+    background: rgba(22, 17, 37, 0.95) !important;
+    box-shadow: var(--shadow-lg) !important;
+    padding: 0 var(--space-4) !important;
+    z-index: var(--z-nav) !important;
+  }
+
+  /* Navigation items container inside floating bottom nav */
+  .sidebar-nav-links {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Hide left-sidebar branding and user details */
+  .sidebar-brand, .sidebar-user {
+    display: none !important;
+  }
+
+  /* Revert navigation buttons to normal horizontal tab style */
+  .nav-item {
+    flex: 1 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 48px !important;
+    width: auto !important;
+    background: transparent !important;
+    padding: var(--space-1) 0 !important;
+    color: var(--text-muted) !important;
+  }
+  .nav-item:hover {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+  }
+  .nav-item.active {
+    background: transparent !important;
+    color: var(--primary-light) !important;
+  }
+  .nav-item.active::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 24px !important;
+    height: 3px !important;
+    background: var(--primary) !important;
+    border-radius: 0 0 var(--radius-full) var(--radius-full) !important;
+    box-shadow: 0 0 8px var(--primary-glow) !important;
+  }
+  .nav-item i {
+    font-size: 1.1rem !important;
+    margin-bottom: 2px !important;
+    width: auto !important;
+    text-align: center !important;
+  }
+  .nav-item span {
+    display: inline !important;
+    font-size: 0.6rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  /* Revert FAB style on desktop bottom dock */
+  .nav-fab {
+    flex: 1 !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: auto !important;
+    margin-top: -16px !important;
+    background: transparent !important;
+  }
+  .nav-fab-circle {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--primary), #a855f7) !important;
+    color: white !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.2rem !important;
+    box-shadow: 0 4px 16px var(--primary-glow) !important;
+    border: 3px solid var(--bg-base) !important;
+  }
+  .nav-fab span {
+    display: inline !important;
+    font-size: 0.6rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-muted) !important;
+    margin-top: 4px !important;
+  }
+  .nav-fab.active span {
+    color: var(--primary-light) !important;
+  }
+}
+
+/* Responsive grid layouts */
+.grid-dashboard {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: 1fr;
+}
+@media (max-width: 1023px) {
+  .grid-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Responsive Chat Workspace ---- */
+.chat-workspace {
+  height: 500px;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+.chat-list-pane {
+  width: 30% !important;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
+  padding: var(--space-3) 0;
+  display: flex;
+  flex-direction: column;
+}
+.chat-window-pane {
+  width: 70% !important;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+}
+.chat-back-btn {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  .chat-list-pane {
+    width: 100% !important;
+    border-right: none !important;
+  }
+  .chat-window-pane {
+    width: 100% !important;
+  }
+  .chat-back-btn {
+    display: inline-flex !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-secondary) !important;
+  }
+  
+  /* Toggle panel visibility based on workspace state class */
+  .chat-workspace.view-list .chat-list-pane {
+    display: flex !important;
+  }
+  .chat-workspace.view-list .chat-window-pane {
+    display: none !important;
+  }
+  .chat-workspace.view-chat .chat-list-pane {
+    display: none !important;
+  }
+  .chat-workspace.view-chat .chat-window-pane {
+    display: flex !important;
+  }
+}
+
+/* Notification dropdown responsive alignment */
+.notification-dropdown {
+  position: absolute !important;
+  right: 0 !important;
+  width: 320px !important;
+  padding: var(--space-3) !important;
+  top: calc(100% + 12px) !important;
+  z-index: 1000 !important;
+}
+
+@media (max-width: 767px) {
+  .notification-dropdown {
+    position: fixed !important;
+    top: 74px !important; /* Positions it right below the header */
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 32px) !important; /* Equal 16px margins on left/right */
+    max-width: 400px !important;
+  }
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}

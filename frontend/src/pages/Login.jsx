@@ -74,24 +74,17 @@ export default function Login() {
 
       {/* Brand Header */}
       <div className="animate-slide-up" style={{ zIndex: 10, marginBottom: "var(--space-8)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{
-          background: "linear-gradient(135deg, var(--primary), #a855f7)",
-          color: "white",
+        <img src="/logo.png" alt="404 Found Logo" style={{
           width: 56,
           height: 56,
           borderRadius: "var(--radius-xl)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "1.5rem",
+          objectFit: "contain",
           boxShadow: "var(--shadow-glow-lg)",
           marginBottom: "var(--space-4)",
           border: "1px solid rgba(255,255,255,0.1)",
           transition: "transform var(--transition-base)",
           cursor: "pointer",
-        }}>
-          <i className="fas fa-search-plus"></i>
-        </div>
+        }} />
         <h1 className="gradient-text" style={{
           fontFamily: "'Space Grotesk', sans-serif",
           fontSize: "2.5rem",

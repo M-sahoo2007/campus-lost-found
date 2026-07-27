@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../api/apiClient";
 import { useToast } from "../components/ToastContext";
@@ -19,6 +19,24 @@ export default function Admin() {
   const [resolutionClaimant, setResolutionClaimant] = useState("");
   const [resolutionRoll, setResolutionRoll] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  const hotspots = useMemo(() => {
+    const locCounts = {};
+    items.forEach(item => {
+      if (item.location) {
+        const loc = item.location.trim().toLowerCase();
+        locCounts[loc] = (locCounts[loc] || 0) + 1;
+      }
+    });
+    return Object.entries(locCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([loc, count]) => ({
+        location: loc.charAt(0).toUpperCase() + loc.slice(1),
+        count,
+        percentage: items.length > 0 ? Math.round((count / items.length) * 100) : 0
+      }));
+  }, [items]);
 
   useEffect(() => { loadDashboardData(); }, []);
 
@@ -96,10 +114,10 @@ export default function Admin() {
   const disputedItems = items.filter(item => item.status === "disputed");
 
   return (
-    <div className="page animate-fade-in" style={{ display: "flex", flexDirection: "column", paddingBottom: 72 }}>
+    <div className="page animate-fade-in">
       <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }} className="page-content">
         {/* Header */}
         <header className="app-header">
           <div className="app-header-inner">
@@ -168,7 +186,7 @@ export default function Admin() {
               </div>
 
               {/* Recent Logs + Model Parameters */}
-              <div className="grid" style={{ gridTemplateColumns: "2fr 1fr", gap: "var(--space-6)" }}>
+              <div className="grid-dashboard">
                 <div className="card">
                   <div className="card-body" style={{ padding: "var(--space-6)" }}>
                     <div className="section-header" style={{ marginBottom: "var(--space-5)" }}>
@@ -182,7 +200,7 @@ export default function Admin() {
                           <div key={idx} className="flex items-center justify-between" style={{ padding: "var(--space-3)", background: "var(--bg-surface)", borderRadius: "var(--radius-lg)", transition: "background var(--transition-fast)" }}>
                             <div className="flex items-center gap-3" style={{ minWidth: 0 }}>
                               <img src={API.getImageUrl(item.filename)} alt="" style={{ width: 44, height: 44, borderRadius: "var(--radius-md)", objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
-                                onError={(e) => { e.target.src = "https://via.placeholder.com/50?text=Item"; }} />
+                                onError={(e) => { e.target.src = "/placeholder.svg"; }} />
                               <div style={{ minWidth: 0 }}>
                                 <p style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "0.85rem" }} className="line-clamp-1">{item.description || "Found Item"}</p>
                                 <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
@@ -200,25 +218,6 @@ export default function Admin() {
                   </div>
                 </div>
 
-                <div className="card">
-                  <div className="card-body" style={{ padding: "var(--space-6)" }}>
-                    <div className="section-header" style={{ marginBottom: "var(--space-5)" }}>
-                      <i className="fas fa-circle-nodes"></i><h3 style={{ fontSize: "1rem" }}>Model Parameters</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        { label: "AI Encoder Backbone", value: "google/siglip-base-patch16-224" },
-                        { label: "Vector Database", value: "FAISS IndexFlatIP (Cosine)" },
-                        { label: "AI Accuracy Metrics", value: "92.0% Precision@1 (BTP)" },
-                      ].map((p, i) => (
-                        <div key={i} style={{ padding: "var(--space-3)", background: "var(--bg-surface)", borderRadius: "var(--radius-lg)" }}>
-                          <span className="stat-label" style={{ display: "block", marginBottom: 4 }}>{p.label}</span>
-                          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-primary)" }}>{p.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -266,7 +265,7 @@ export default function Admin() {
                           <tr key={idx}>
                             <td>
                               <img src={API.getImageUrl(item.filename)} alt="" style={{ width: 44, height: 44, borderRadius: "var(--radius-md)", objectFit: "cover", border: "1px solid var(--border)" }}
-                                onError={(e) => { e.target.src = "https://via.placeholder.com/50?text=Item"; }} />
+                                onError={(e) => { e.target.src = "/placeholder.svg"; }} />
                             </td>
                             <td>
                               <div style={{ fontWeight: 700, color: "var(--text-primary)" }}>{item.description || "Unidentified"}</div>
@@ -291,7 +290,7 @@ export default function Admin() {
                                     <i className="fas fa-gavel"></i>
                                   </button>
                                 )}
-                                {item.status === "disputed" && (
+                                {(item.status === "disputed" || item.status === "claimed") && (
                                   <button onClick={() => handleUpdateStatus(item.filename, "held")} className="btn-icon" title="Restore Held">
                                     <i className="fas fa-undo"></i>
                                   </button>
@@ -334,7 +333,7 @@ export default function Admin() {
                         <div className="flex gap-4">
                           <div style={{ width: 72, height: 72, borderRadius: "var(--radius-lg)", background: "var(--bg-elevated)", border: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <img src={API.getImageUrl(item.filename)} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }}
-                              onError={(e) => { e.target.src = "https://via.placeholder.com/80?text=Item"; }} />
+                              onError={(e) => { e.target.src = "/placeholder.svg"; }} />
                           </div>
                           <div>
                             <span className="badge badge-danger mb-2">Disputed Claim</span>
@@ -400,40 +399,34 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Bar Chart */}
+              {/* Hotspots Chart */}
               <div className="card">
                 <div className="card-body" style={{ padding: "var(--space-6)" }}>
                   <div className="section-header mb-5">
-                    <i className="fas fa-chart-line"></i><h3 style={{ fontSize: "1rem" }}>Weekly Intake Activity</h3>
+                    <i className="fas fa-map-marked-alt text-primary"></i><h3 style={{ fontSize: "1rem" }}>Campus Hotspots</h3>
                   </div>
-                  <div style={{ height: 180, display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 var(--space-4) var(--space-2)", borderBottom: "1px solid var(--border)" }}>
-                    {[
-                      { day: "Mon", count: 4, height: "40%" },
-                      { day: "Tue", count: 7, height: "70%" },
-                      { day: "Wed", count: 3, height: "30%" },
-                      { day: "Thu", count: 9, height: "90%" },
-                      { day: "Fri", count: 5, height: "50%" },
-                      { day: "Sat", count: 2, height: "20%" },
-                      { day: "Sun", count: 1, height: "10%" },
-                    ].map((d, idx) => (
-                      <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: 36, cursor: "pointer" }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--primary-light)", opacity: 0, transition: "opacity var(--transition-fast)" }}
-                          className="bar-count">{d.count}</span>
-                        <div style={{
-                          height: d.height,
-                          width: 24,
-                          background: "linear-gradient(to top, var(--primary), var(--primary-light))",
-                          borderRadius: "var(--radius-sm) var(--radius-sm) 0 0",
-                          boxShadow: "0 0 8px var(--primary-glow)",
-                          transition: "all var(--transition-base)",
-                        }}
-                          onMouseEnter={(e) => { e.target.previousElementSibling && (e.target.previousElementSibling.style.opacity = 1); }}
-                          onMouseLeave={(e) => { e.target.previousElementSibling && (e.target.previousElementSibling.style.opacity = 0); }}
-                        ></div>
-                        <span className="stat-label" style={{ marginTop: 4 }}>{d.day}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {hotspots.length === 0 ? (
+                    <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>No location data available.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {hotspots.map((h, idx) => (
+                        <div key={idx}>
+                          <div className="flex justify-between items-center mb-1">
+                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>{h.location}</span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{h.count} items ({h.percentage}%)</span>
+                          </div>
+                          <div style={{ width: "100%", height: 8, background: "var(--bg-elevated)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+                            <div style={{ 
+                              width: `${h.percentage}%`, 
+                              height: "100%", 
+                              background: "linear-gradient(90deg, var(--primary), var(--primary-light))",
+                              borderRadius: "var(--radius-full)"
+                            }}></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -494,7 +487,7 @@ export default function Admin() {
                 <div className="flex gap-4" style={{ padding: "var(--space-3)", background: "var(--bg-surface)", borderRadius: "var(--radius-xl)", border: "1px solid var(--border-subtle)" }}>
                   <div style={{ width: 56, height: 56, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img src={API.getImageUrl(selectedDispute.filename)} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 2 }}
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/80?text=Item"; }} />
+                      onError={(e) => { e.target.src = "/placeholder.svg"; }} />
                   </div>
                   <div>
                     <span className="badge badge-primary mb-1">{selectedDispute.category}</span>
