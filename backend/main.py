@@ -294,6 +294,14 @@ def update_item_status(filename: str, req: StatusRequest, user: dict = Depends(g
             item["handed_over_by"] = user["email"]
             break
 
+    # Automatically waive off any 'lost' requests filed by this student
+    if req.status == "claimed" and req.claimed_by:
+        resolved_count = db.resolve_lost_requests(req.claimed_by)
+        if resolved_count > 0:
+            for item in matcher.metadata:
+                if item.get("status") == "lost" and item.get("reported_by") == req.claimed_by:
+                    item["status"] = "resolved"
+
     # We do not need to save matcher since we don't save metadata.json anymore
     # but let's just trigger sync
     storage.upload_data(BASE_DIR)

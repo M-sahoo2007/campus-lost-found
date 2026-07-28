@@ -150,6 +150,17 @@ class DatabaseManager:
             conn.commit()
             return cursor.rowcount > 0
 
+    def resolve_lost_requests(self, student_email):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE items
+                SET status = 'resolved'
+                WHERE reported_by = ? AND status = 'lost'
+            """, (student_email,))
+            conn.commit()
+            return cursor.rowcount
+
     def delete_item(self, filename):
         with self.get_connection() as conn:
             cursor = conn.cursor()
