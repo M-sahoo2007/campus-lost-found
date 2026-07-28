@@ -1249,7 +1249,7 @@ input[type="checkbox"] {
 /* ---- Confidence Match Badge ---- */
 .match-badge {
   position: absolute;
-  top: var(--space-3);
+  top: 130px; /* Position it at the bottom of the image container (height is 180px) */
   right: var(--space-3);
   z-index: 2;
 }

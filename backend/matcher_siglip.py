@@ -68,10 +68,9 @@ class LostAndFoundMatcher:
 
     def _format_results(self, scores, indices, is_text=False):
         results = []
-        # Filter out random/weak matches:
-        # - Text-to-image similarity typically drops below 0.03 for unrelated items.
-        # - Image-to-image similarity typically drops below 0.12 for unrelated items.
-        threshold = 0.03 if is_text else 0.12
+        # - Text-to-image similarity drops below 0.15 for unrelated items.
+        # - Image-to-image similarity drops below 0.25 for unrelated items.
+        threshold = 0.15 if is_text else 0.25
         
         for score, idx in zip(scores, indices):
             if idx == -1:
@@ -87,13 +86,11 @@ class LostAndFoundMatcher:
             
             # Scale the score for display (Human-friendly %)
             if is_text:
-                # Text scores usually range from 0.0 to 0.2
-                display_score = min(0.99, max(0.10, (raw_score * 5.0) + 0.10))
-                confidence = "High" if raw_score > 0.10 else "Medium" if raw_score > 0.05 else "Low"
-            else:
-                # Image scores usually range from 0.1 to 0.4
                 display_score = min(0.99, max(0.10, (raw_score * 3.5) + 0.10))
-                confidence = "High" if raw_score > 0.20 else "Medium" if raw_score > 0.14 else "Low"
+                confidence = "High" if raw_score > 0.22 else "Medium"
+            else:
+                display_score = min(0.99, max(0.10, (raw_score * 2.5) + 0.10))
+                confidence = "High" if raw_score > 0.35 else "Medium"
             
             # Create a dictionary copy with all item fields + scoring fields
             res_item = {
