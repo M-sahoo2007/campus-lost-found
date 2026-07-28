@@ -115,3 +115,22 @@ class LostAndFoundMatcher:
         if os.path.exists(os.path.join(path, "found_items.index")):
             self.index = faiss.read_index(os.path.join(path, "found_items.index"))
             print(f"Loaded index with {self.index.ntotal} items")
+
+    def rebuild_index(self, base_dir):
+        """Rebuilds FAISS index to ensure it perfectly matches the metadata array"""
+        self.index = faiss.IndexFlatIP(768)
+        for item in self.metadata:
+            filename = item.get("filename", "")
+            found_path = os.path.join(base_dir, "found_items", filename)
+            lost_path = os.path.join(base_dir, "lost_items", filename)
+            
+            if os.path.exists(found_path):
+                emb = self.get_embedding(found_path)
+            elif os.path.exists(lost_path):
+                emb = self.get_embedding(lost_path)
+            else:
+                text_desc = f"{item.get('category', '')} {item.get('description', '')}".strip()
+                emb = self.get_text_embedding(text_desc if text_desc else "unknown item")
+            
+            self.index.add(emb)
+        print(f"Rebuilt index with {self.index.ntotal} items to match metadata length {len(self.metadata)}")

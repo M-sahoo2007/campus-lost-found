@@ -196,15 +196,12 @@ async def startup_event():
             
     matcher.metadata = valid_items
     
+    if len(matcher.metadata) != matcher.index.ntotal:
+        print(f"Index mismatch detected! Metadata length: {len(matcher.metadata)}, Index length: {matcher.index.ntotal}")
+        pruned = True # Force rebuild
     if pruned:
         print("Items pruned. Rebuilding FAISS index...")
-        import faiss
-        matcher.index = faiss.IndexFlatIP(768)
-        for item in matcher.metadata:
-            path = os.path.join(FOUND_DIR, item["filename"])
-            if os.path.exists(path):
-                emb = matcher.get_embedding(path)
-                matcher.index.add(emb)
+        matcher.rebuild_index(BASE_DIR)
         matcher.save(path=BASE_DIR)
         storage.upload_data(BASE_DIR)
         
@@ -334,13 +331,7 @@ def delete_item(filename: str, user: dict = Depends(get_current_user)):
     matcher.metadata.pop(idx_to_remove)
     
     # Rebuild FAISS index
-    import faiss
-    matcher.index = faiss.IndexFlatIP(768)
-    for item in matcher.metadata:
-        path = os.path.join(FOUND_DIR, item["filename"])
-        if os.path.exists(path):
-            emb = matcher.get_embedding(path)
-            matcher.index.add(emb)
+    matcher.rebuild_index(BASE_DIR)
             
     matcher.save(path=BASE_DIR)
     storage.upload_data(BASE_DIR)
