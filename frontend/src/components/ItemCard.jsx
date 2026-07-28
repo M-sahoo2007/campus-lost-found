@@ -13,16 +13,20 @@ export default function ItemCard({ item, onClaimClick }) {
     ? new Date(item.date).toLocaleDateString()
     : "Recently";
 
-  const statusClass = item.status === "claimed"
+  const statusClass = item.status === "claimed" || item.status === "resolved"
     ? "badge-success"
     : item.status === "disputed"
     ? "badge-danger"
+    : item.status === "lost"
+    ? "badge-warning"
     : "badge-primary";
 
-  const statusDotClass = item.status === "claimed"
+  const statusDotClass = item.status === "claimed" || item.status === "resolved"
     ? "status-dot-claimed"
     : item.status === "disputed"
     ? "status-dot-disputed"
+    : item.status === "lost"
+    ? "status-dot-lost"
     : "status-dot-held";
 
   return (
@@ -80,7 +84,7 @@ export default function ItemCard({ item, onClaimClick }) {
             <div className="space-y-3">
               <div className="info-row">
                 <span className="info-row-icon"><i className="fas fa-map-marker-alt"></i></span>
-                <span>Found at: <span className="info-row-value">{item.location}</span></span>
+                <span>{item.status === "lost" ? "Lost at:" : "Found at:"} <span className="info-row-value">{item.location}</span></span>
               </div>
 
               <div className="info-row">

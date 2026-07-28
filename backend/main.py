@@ -513,9 +513,9 @@ def all_found(authorization: str = Header(None)):
             
     items = matcher.metadata
     if not is_privileged:
-        items = [i for i in items if i.get("status", "held") not in ["claimed", "lost"]]
+        items = [i for i in items if i.get("status", "held") not in ["claimed", "resolved"]]
     else:
-        items = [i for i in items if i.get("status", "held") != "lost"]
+        items = [i for i in items if i.get("status", "held") != "resolved"]
         
     return JSONResponse({"items": items, "total": len(items)})
 
