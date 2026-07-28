@@ -6,6 +6,7 @@ import faiss
 import numpy as np
 import os
 import json
+import time
 
 class LostAndFoundMatcher:
     def __init__(self):
