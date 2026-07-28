@@ -137,6 +137,21 @@ const API = {
     }
   },
 
+  async reportLost(formData) {
+    try {
+      const response = await fetch(`${this.baseURL}/report-lost`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: formData,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error("Error reporting lost item:", error);
+      throw error;
+    }
+  },
+
   async searchLost(searchData) {
     try {
       const formData = new FormData();

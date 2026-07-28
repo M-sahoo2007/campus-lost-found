@@ -23,7 +23,7 @@ class StorageManager:
                 repo_type="dataset",
                 local_dir=local_dir,
                 token=self.token,
-                allow_patterns=["found_items/*", "metadata.json", "found_items.index"],
+                allow_patterns=["found_items/*", "database.db", "found_items.index"],
                 ignore_metadata_files=True
             )
             print("STORAGE_DEBUG: Initial sync-down complete.")
@@ -42,7 +42,7 @@ class StorageManager:
                 repo_id=self.repo_id,
                 repo_type="dataset",
                 path_in_repo=".",
-                allow_patterns=["found_items/*", "metadata.json", "found_items.index"]
+                allow_patterns=["found_items/*", "database.db", "found_items.index"]
             )
             print("STORAGE_DEBUG: Sync-up complete.")
         except Exception as e:

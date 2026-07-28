@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Header
+from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +18,7 @@ FRONTEND_DIR = os.path.join(os.path.dirname(BASE_DIR), "frontend")
 
 from matcher_siglip import LostAndFoundMatcher
 from storage_manager import StorageManager
+from database import DatabaseManager
 
 app = FastAPI()
 
@@ -42,6 +44,7 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(DIST_ASSETS_DIR, exist_ok=True)
 
 storage = StorageManager()
+db = DatabaseManager(os.path.join(BASE_DIR, "database.db"))
 
 # Try to pull latest data from Hugging Face Dataset on startup
 storage.download_data(BASE_DIR)
@@ -112,13 +115,13 @@ def verify_token(token: str) -> dict | None:
         return None
 
 # User Database Helper functions
-def load_users() -> list:
-    if not os.path.exists(USERS_FILE):
-        users = []
+def ensure_default_users():
+    users = db.get_users()
+    if not users:
         roles = ["student", "guard", "admin"]
         for role in roles:
             pw_hash, salt = hash_password(f"{role}123")
-            users.append({
+            db.add_user({
                 "name": f"Demo {role.capitalize()}",
                 "email": f"{role}@iiitd.ac.in",
                 "password_hash": pw_hash,
@@ -127,18 +130,6 @@ def load_users() -> list:
                 "roll_number": "2023504" if role == "student" else "N/A",
                 "created_at": int(time.time())
             })
-        with open(USERS_FILE, "w") as f:
-            json.dump(users, f)
-        return users
-    try:
-        with open(USERS_FILE) as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-def save_users(users: list):
-    with open(USERS_FILE, "w") as f:
-        json.dump(users, f)
 
 # Authentication Dependencies
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
@@ -162,8 +153,8 @@ class LoginRequest(BaseModel):
 
 class StatusRequest(BaseModel):
     status: str
-    claimed_by: str = None
-    claimed_by_name: str = None
+    claimed_by: Optional[str] = None
+    claimed_by_name: Optional[str] = None
 
 @app.on_event("startup")
 async def startup_event():
@@ -172,32 +163,50 @@ async def startup_event():
     print(f"BASE_DIR: {BASE_DIR}")
     print(f"FOUND_DIR: {FOUND_DIR}")
     
-    # Load and seed users
-    users = load_users()
-    print(f"Registered Users count: {len(users)}")
+    # Migrate from JSON to SQLite if applicable
+    db.migrate_from_json(USERS_FILE, os.path.join(BASE_DIR, "metadata.json"))
+    ensure_default_users()
     
-    # Normalize existing item metadata fields
-    modified = False
-    for item in matcher.metadata:
-        if "status" not in item:
-            item["status"] = "held"
-            modified = True
-        if "timestamp" not in item:
-            item["timestamp"] = int(time.time())
-            modified = True
-        if "reported_by" not in item:
-            item["reported_by"] = "anonymous"
-            modified = True
-        if "claimed_by" not in item:
-            item["claimed_by"] = None
-            modified = True
-        if "claimed_by_name" not in item:
-            item["claimed_by_name"] = None
-            modified = True
+    print(f"Registered Users count: {len(db.get_users())}")
+    
+    # Auto-cleanup older or claimed items
+    now = int(time.time())
+    thirty_days = 30 * 24 * 60 * 60
+    items = db.get_items()
+    pruned = False
+    valid_items = []
+    
+    for item in items:
+        # Check pruning condition
+        is_claimed = item.get("status") == "claimed"
+        is_old = (now - item.get("timestamp", now)) > thirty_days
+        
+        if is_claimed or is_old:
+            print(f"Pruning item {item['filename']} (claimed: {is_claimed}, old: {is_old})")
+            db.delete_item(item["filename"])
+            path = os.path.join(FOUND_DIR, item["filename"])
+            if os.path.exists(path):
+                try:
+                    os.remove(path)
+                except Exception:
+                    pass
+            pruned = True
+        else:
+            valid_items.append(item)
             
-    if modified:
-        print("Normalized item metadata fields for backwards compatibility.")
+    matcher.metadata = valid_items
+    
+    if pruned:
+        print("Items pruned. Rebuilding FAISS index...")
+        import faiss
+        matcher.index = faiss.IndexFlatIP(768)
+        for item in matcher.metadata:
+            path = os.path.join(FOUND_DIR, item["filename"])
+            if os.path.exists(path):
+                emb = matcher.get_embedding(path)
+                matcher.index.add(emb)
         matcher.save(path=BASE_DIR)
+        storage.upload_data(BASE_DIR)
         
     print(f"Items currently in database: {len(matcher.metadata)}")
     print("="*50)
@@ -205,11 +214,9 @@ async def startup_event():
 # Authentication endpoints
 @app.post("/api/auth/register")
 def register(req: RegisterRequest):
-    users = load_users()
     email = req.email.strip().lower()
     
-    # Check duplicate email
-    if any(u["email"] == email for u in users):
+    if db.get_user_by_email(email):
         raise HTTPException(status_code=400, detail="Email is already registered")
         
     pw_hash, salt = hash_password(req.password)
@@ -222,8 +229,7 @@ def register(req: RegisterRequest):
         "roll_number": req.roll_number.strip() if req.roll_number else "N/A",
         "created_at": int(time.time())
     }
-    users.append(new_user)
-    save_users(users)
+    db.add_user(new_user)
     
     token = generate_token(new_user)
     return {
@@ -238,10 +244,9 @@ def register(req: RegisterRequest):
 
 @app.post("/api/auth/login")
 def login(req: LoginRequest):
-    users = load_users()
     email = req.email.strip().lower()
     
-    user = next((u for u in users if u["email"] == email), None)
+    user = db.get_user_by_email(email)
     if not user:
         raise HTTPException(status_code=400, detail="Invalid email or password")
         
@@ -267,7 +272,7 @@ def get_me(user: dict = Depends(get_current_user)):
 def get_users(user: dict = Depends(get_current_user)):
     if user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Permission denied")
-    return {"users": load_users()}
+    return {"users": db.get_users()}
 
 
 # Item management endpoints (Auth restricted)
@@ -276,20 +281,21 @@ def update_item_status(filename: str, req: StatusRequest, user: dict = Depends(g
     if user["role"] not in ["admin", "guard"]:
         raise HTTPException(status_code=403, detail="Permission denied")
         
-    item_found = False
+    updated = db.update_item_status(filename, req.status, req.claimed_by, req.claimed_by_name, user["email"])
+    if not updated:
+        raise HTTPException(status_code=404, detail="Item not found")
+        
+    # Update memory metadata
     for item in matcher.metadata:
         if item["filename"] == filename:
             item["status"] = req.status
             item["claimed_by"] = req.claimed_by
             item["claimed_by_name"] = req.claimed_by_name
             item["handed_over_by"] = user["email"]
-            item_found = True
             break
-            
-    if not item_found:
-        raise HTTPException(status_code=404, detail="Item not found")
-        
-    matcher.save(path=BASE_DIR)
+
+    # We do not need to save matcher since we don't save metadata.json anymore
+    # but let's just trigger sync
     storage.upload_data(BASE_DIR)
     return {"status": "success", "message": f"Item {filename} updated successfully"}
 
@@ -315,7 +321,8 @@ def delete_item(filename: str, user: dict = Depends(get_current_user)):
         except Exception as e:
             print(f"Error removing file {file_path}: {e}")
             
-    # Remove from metadata
+    # Remove from DB and memory
+    db.delete_item(filename)
     matcher.metadata.pop(idx_to_remove)
     
     # Rebuild FAISS index
@@ -368,13 +375,15 @@ async def report_found(
         print(f"DEBUG: Adding to matcher...")
         matcher.add_found_item(save_path, location, contact, description, category)
         
-        # Attach additional fields
+        # Attach additional fields in memory
         matcher.metadata[-1]["status"] = "held"
         matcher.metadata[-1]["timestamp"] = timestamp
         matcher.metadata[-1]["reported_by"] = reported_by
         matcher.metadata[-1]["claimed_by"] = None
         matcher.metadata[-1]["claimed_by_name"] = None
         
+        # Save to DB
+        db.add_item(matcher.metadata[-1])
         matcher.save(path=BASE_DIR)
         
         # Persist to Hugging Face Hub
@@ -384,6 +393,54 @@ async def report_found(
         return {"status": "success", "filename": safe_filename}
     except Exception as e:
         print(f"CRITICAL ERROR in report_found: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/report-lost")
+async def report_lost(
+    location: str = Form(...),
+    contact: str = Form(...),
+    description: str = Form(""),
+    category: str = Form(""),
+    file: UploadFile = File(None),
+    authorization: str = Header(None)
+):
+    try:
+        reported_by = "anonymous"
+        if authorization and authorization.startswith("Bearer "):
+            token = authorization.split(" ")[1]
+            payload = verify_token(token)
+            if payload:
+                reported_by = payload["email"]
+
+        os.makedirs(LOST_DIR, exist_ok=True)
+        
+        timestamp = int(time.time())
+        save_path = None
+        
+        if file and file.filename:
+            safe_filename = f"lost_{timestamp}_{file.filename.replace(' ', '_')}"
+            save_path = os.path.join(LOST_DIR, safe_filename)
+            with open(save_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+        
+        matcher.add_found_item(save_path, location, contact, description, category)
+        
+        matcher.metadata[-1]["status"] = "lost"
+        matcher.metadata[-1]["timestamp"] = timestamp
+        matcher.metadata[-1]["reported_by"] = reported_by
+        matcher.metadata[-1]["claimed_by"] = None
+        matcher.metadata[-1]["claimed_by_name"] = None
+        
+        db.add_item(matcher.metadata[-1])
+        matcher.save(path=BASE_DIR)
+        
+        storage.upload_data(BASE_DIR)
+        
+        return {"status": "success", "filename": matcher.metadata[-1]["filename"]}
+    except Exception as e:
+        print(f"CRITICAL ERROR in report_lost: {str(e)}")
         import traceback
         traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -419,11 +476,14 @@ async def search_lost(
             return JSONResponse(status_code=400, content={"error": "Provide image or text"})
         
         # Filter results: only active/held/disputed items, don't show claimed items to student
+        # Also do not show items with status "lost" (reported lost by someone)
         user_payload = verify_token(token)
         is_student = user_payload and user_payload["role"] == "student"
         
         if is_student:
-            results = [r for r in results if r.get("status", "held") != "claimed"]
+            results = [r for r in results if r.get("status", "held") not in ["claimed", "lost"]]
+        else:
+            results = [r for r in results if r.get("status", "held") != "lost"]
             
         print(f"DEBUG: Found {len(results)} matches")
         return {"matches": results}
@@ -445,7 +505,9 @@ def all_found(authorization: str = Header(None)):
             
     items = matcher.metadata
     if not is_privileged:
-        items = [i for i in items if i.get("status", "held") != "claimed"]
+        items = [i for i in items if i.get("status", "held") not in ["claimed", "lost"]]
+    else:
+        items = [i for i in items if i.get("status", "held") != "lost"]
         
     return JSONResponse({"items": items, "total": len(items)})
 
@@ -468,7 +530,31 @@ def serve_spa(catchall: str):
         with open(index_path, encoding="utf-8") as f:
             return f.read()
             
-    return HTMLResponse("<h1>Frontend template not found. Please compile the React app.</h1>", status_code=404)
+    # Fallback status page for backend-only deployments (like Hugging Face Spaces)
+    return HTMLResponse(
+        """
+        <html>
+            <head>
+                <title>404 Found - Backend API</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 50px; background-color: #f8f9fa; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                    h1 { color: #0070f3; }
+                    p { font-size: 1.1em; line-height: 1.6; }
+                    .url { font-weight: bold; color: #d11a2a; word-break: break-all; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>404 Found API is Online ⚡</h1>
+                    <p>This Hugging Face Space hosts only the **Backend API services**.</p>
+                    <p>To use the application, please open the <strong>Vercel Frontend URL</strong> instead.</p>
+                </div>
+            </body>
+        </html>
+        """,
+        status_code=200
+    )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7860)

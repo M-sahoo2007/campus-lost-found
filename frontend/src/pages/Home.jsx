@@ -80,22 +80,29 @@ export default function Home() {
     } finally { setLoading(false); }
   };
 
-  const handleReportFound = async (formData, reportFile) => {
-    if (!reportFile || !formData.location || !formData.contact) {
+  const handleReport = async (formData, reportFile, reportType) => {
+    if ((reportType === "found" && !reportFile) || !formData.location || !formData.contact) {
       toast.warning("Please fill all required fields");
       return;
     }
     const form = new FormData();
-    form.append("file", reportFile);
+    if (reportFile) {
+      form.append("file", reportFile);
+    }
     form.append("location", formData.location);
     form.append("contact", formData.contact);
     form.append("description", formData.description);
     form.append("category", formData.category);
     setLoading(true);
     try {
-      await API.reportFound(form);
-      toast.success("Item reported successfully!");
-      setActiveTab("found");
+      if (reportType === "found") {
+        await API.reportFound(form);
+        toast.success("Found item reported successfully!");
+      } else {
+        await API.reportLost(form);
+        toast.success("Lost item reported successfully!");
+      }
+      setActiveTab("my-reports");
       loadFoundItems();
     } catch (error) {
       toast.error("Error reporting item: " + error.message);
@@ -125,7 +132,7 @@ export default function Home() {
         {activeTab === "report" && (
           <div className="max-w-2xl mx-auto mb-8">
             <ReportForm
-              onSubmit={handleReportFound}
+              onSubmit={handleReport}
               loading={loading}
               onCancel={() => setActiveTab("found")}
             />

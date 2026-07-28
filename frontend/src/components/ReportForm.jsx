@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export default function ReportForm({ onSubmit, loading, onCancel }) {
+  const [reportType, setReportType] = useState("found");
   const [formData, setFormData] = useState({
     description: "",
     location: "",
@@ -38,7 +39,7 @@ export default function ReportForm({ onSubmit, loading, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await onSubmit(formData, reportFile);
+    await onSubmit(formData, reportFile, reportType);
     setFormData({ description: "", location: "", contact: "", category: "" });
     setReportFile(null);
     setPreviewUrl(null);
@@ -48,11 +49,26 @@ export default function ReportForm({ onSubmit, loading, onCancel }) {
     <div className="card animate-slide-up" style={{ borderRadius: "var(--radius-2xl)" }}>
       <div className="card-body" style={{ padding: "var(--space-6)" }}>
         <div className="flex justify-between items-center mb-5">
-          <h4 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "1.1rem", margin: 0 }}>
-            <i className="fas fa-plus-circle mr-2 text-violet"></i>Log Found Item
-          </h4>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setReportType("found")}
+              className={reportType === "found" ? "btn-primary" : "btn-secondary"}
+              style={{ padding: "8px 16px", borderRadius: "var(--radius-full)", fontSize: "0.85rem", fontWeight: 600 }}
+            >
+              Found an Item
+            </button>
+            <button
+              type="button"
+              onClick={() => setReportType("lost")}
+              className={reportType === "lost" ? "btn-primary" : "btn-secondary"}
+              style={{ padding: "8px 16px", borderRadius: "var(--radius-full)", fontSize: "0.85rem", fontWeight: 600 }}
+            >
+              Lost an Item
+            </button>
+          </div>
           {onCancel && (
-            <button onClick={onCancel} className="btn-icon" style={{ width: 32, height: 32 }}>
+            <button type="button" onClick={onCancel} className="btn-icon" style={{ width: 32, height: 32 }}>
               <i className="fas fa-times" style={{ fontSize: "0.75rem" }}></i>
             </button>
           )}
@@ -62,7 +78,7 @@ export default function ReportForm({ onSubmit, loading, onCancel }) {
           {/* Image Upload Zone */}
           <div>
             <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: 8 }}>
-              Upload Item Photo <span style={{ color: "var(--danger)" }}>*</span>
+              Upload Item Photo {reportType === "found" && <span style={{ color: "var(--danger)" }}>*</span>}
             </label>
             <label style={{ display: "block", cursor: "pointer" }}>
               <div className="upload-zone" style={{ padding: "var(--space-6) var(--space-4)" }}>
@@ -70,7 +86,7 @@ export default function ReportForm({ onSubmit, loading, onCancel }) {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setReportFile(e.target.files?.[0] || null)}
-                  required
+                  required={reportType === "found"}
                   style={{ display: "none" }}
                 />
                 <div className="upload-zone-icon">
@@ -132,7 +148,7 @@ export default function ReportForm({ onSubmit, loading, onCancel }) {
           {/* Location */}
           <div>
             <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", marginBottom: 8 }}>
-              Location Found <span style={{ color: "var(--danger)" }}>*</span>
+              {reportType === "found" ? "Location Found" : "Location Lost (Approximate)"} <span style={{ color: "var(--danger)" }}>*</span>
             </label>
             <div className="input-icon-wrapper">
               <span className="input-icon"><i className="fas fa-map-marker-alt"></i></span>

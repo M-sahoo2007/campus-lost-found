@@ -1,3 +1,11 @@
+---
+title: 404 Found
+emoji: 🔍
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
 # 🔍 404 Found - Smart Campus Lost & Found System
 
 > **A Multimodal Vision-Language Platform for Intelligent Item Retrieval**  

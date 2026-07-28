@@ -9,10 +9,10 @@ import json
 
 class LostAndFoundMatcher:
     def __init__(self):
-        print("Loading SigLIP model...")
+        print("Loading SigLIP 2 model...")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.processor = SiglipProcessor.from_pretrained("google/siglip-base-patch16-224")
-        self.model = SiglipModel.from_pretrained("google/siglip-base-patch16-224").to(self.device).eval()
+        self.processor = SiglipProcessor.from_pretrained("google/siglip2-base-patch16-224")
+        self.model = SiglipModel.from_pretrained("google/siglip2-base-patch16-224").to(self.device).eval()
         self.index = faiss.IndexFlatIP(768)
         self.metadata = []
         print(f"Ready on {self.device}!")
@@ -37,16 +37,23 @@ class LostAndFoundMatcher:
         return emb.cpu().numpy().astype('float32')
 
     def add_found_item(self, img_path, location, contact, description="", category=""):
-        emb = self.get_embedding(img_path)
+        if img_path:
+            emb = self.get_embedding(img_path)
+            filename = os.path.basename(img_path)
+        else:
+            text_desc = f"{category} {description}".strip()
+            emb = self.get_text_embedding(text_desc if text_desc else "unknown item")
+            filename = f"no_image_{int(time.time())}.png"
+            
         self.index.add(emb)
         self.metadata.append({
-            "filename": os.path.basename(img_path),
+            "filename": filename,
             "location": location,
             "contact": contact,
             "description": description,
             "category": category
         })
-        print(f"Added: {os.path.basename(img_path)}")
+        print(f"Added: {filename}")
 
     def find_matches_by_image(self, lost_img_path, top_k=3):
         query = self.get_embedding(lost_img_path)
@@ -60,9 +67,10 @@ class LostAndFoundMatcher:
 
     def _format_results(self, scores, indices, is_text=False):
         results = []
-        # Text-to-image dot products can be much lower, even negative for non-matches.
-        threshold = -0.15 if is_text else -0.10
-        
+        # Filter out random/weak matches:
+        # - Text-to-image similarity typically drops below 0.03 for unrelated items.
+        # - Image-to-image similarity typically drops below 0.12 for unrelated items.
+        threshold = 0.03 if is_text else 0.12
         
         for score, idx in zip(scores, indices):
             if idx == -1:
@@ -70,7 +78,7 @@ class LostAndFoundMatcher:
             
             raw_score = float(score)
             
-            # Skip items below the "sanity" threshold to avoid random matches
+            # Skip items below the threshold to avoid random matches
             if raw_score < threshold:
                 continue
                 
@@ -103,13 +111,9 @@ class LostAndFoundMatcher:
 
     def save(self, path="./"):
         faiss.write_index(self.index, os.path.join(path, "found_items.index"))
-        with open(os.path.join(path, "metadata.json"), "w") as f:
-            json.dump(self.metadata, f)
-        print("Saved!")
+        print("Saved index!")
 
     def load(self, path="./"):
         if os.path.exists(os.path.join(path, "found_items.index")):
             self.index = faiss.read_index(os.path.join(path, "found_items.index"))
-            with open(os.path.join(path, "metadata.json")) as f:
-                self.metadata = json.load(f)
-            print(f"Loaded {self.index.ntotal} items")
+            print(f"Loaded index with {self.index.ntotal} items")
