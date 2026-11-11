@@ -1,233 +1,194 @@
 ---
-title: 404 Found
+title: Smart Campus Lost & Found System
 emoji: 🔍
 colorFrom: blue
 colorTo: indigo
 sdk: docker
 pinned: false
 ---
-# 🔍 404 Found - Smart Campus Lost & Found System
 
-> **A Multimodal Vision-Language Platform for Intelligent Item Retrieval**  
+# 🔍 Smart Campus Lost & Found System
+
+**An AI-powered platform for reporting, discovering, and recovering lost items across a campus.**
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?logo=fastapi)](https://fastapi.tiangolo.com)
-[![SigLIP 2](https://img.shields.io/badge/Model-SigLIP%202-orange?logo=google)](https://huggingface.co/google/siglip2-base-patch16-224)
-[![FAISS](https://img.shields.io/badge/VectorDB-FAISS-blue)](https://github.com/facebookresearch/faiss)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-blue?logo=docker)](https://docker.com)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react)](https://react.dev)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker)](https://www.docker.com)
+[![GitHub](https://img.shields.io/badge/GitHub-M--sahoo2007-181717?logo=github)](https://github.com/M-sahoo2007)
 
 ---
 
-## 📌 Problem Statement
+## 📌 Project Overview
 
-Academic campuses like IIIT Delhi rely on **email broadcasts** for lost & found — a fundamentally broken workflow. Our user survey of the campus community found:
+Smart Campus Lost & Found is designed to make lost-item reporting and recovery easier within an academic campus.
 
-- **71%** of campus members lost an item in the past year
-- **53%** ignore or mark lost-and-found emails as spam  
-- Recovery rate through existing channels is extremely low
+Instead of depending on scattered messages or manual enquiries, users can report found items, search for lost belongings, and follow the recovery process through one centralized application.
 
-The root cause is structural: email is a broadcast system applied to a **matching problem**. The solution is not to improve email — it's to replace it with an intelligent, centralized, image-and-text-aware retrieval platform.
+The project documentation describes a multimodal search approach that can use item images and text descriptions to identify potentially matching records.
 
----
-
-## 🚀 What This Project Does
-
-The **Smart Lost & Found System** is a full-stack web application powered by a state-of-the-art vision-language model. It enables:
+## 🚀 Key Features
 
 | Feature | Description |
 |---|---|
-| 📸 **Image-based search** | Upload a photo of your lost item → AI retrieves visually similar found items |
-| 💬 **Text-based search** | Type a description like *"black JBL earphones with red cable"* → AI matches it to found items |
-| 📋 **Found item reporting** | Finders upload a photo + metadata (location, contact) → auto-indexed and searchable instantly |
-| 🎯 **Confidence-aware ranking** | Results ranked by cosine similarity with High / Medium / Low confidence labels |
-| 🔐 **Role-based access** | Separate dashboards for item owners (students), security gate staff (handover verification), and admins |
+| 📸 Image-based search | Search for visually similar items using photographs, where AI matching is enabled. |
+| 💬 Text-based search | Search using natural-language descriptions. |
+| 📋 Found-item reporting | Report an item found on campus with relevant details. |
+| 🎯 Match ranking | Display potentially matching items in ranked order. |
+| 🔐 User access | Support students and authorized campus staff. |
+| 📊 Administration | Manage item records and claims. |
 
----
+## 🧠 Technology Stack
 
-## 🧠 AI / ML Architecture
+- **Frontend:** React.js and Vite
+- **Backend:** Python and FastAPI
+- **AI Model:** Google SigLIP / SigLIP 2
+- **Vector Database:** FAISS
+- **Deployment:** Docker
 
-This is the core technical contribution of the project — a systematic benchmark of 4 state-of-the-art vision-language models, followed by deployment of the best-performing one.
+## 🧠 AI Search Workflow
 
-### Model Evaluation (Semester 1)
+The intended multimodal retrieval workflow:
 
-Evaluated on a **purpose-built dataset of 20 campus-relevant item categories** (water bottles, bags, phones, keys, wallets, earphones, laptops, ID cards, etc.) on an NVIDIA RTX 3050 GPU.
-
-| Model | P@1 | P@5 | R@5 | MRR | Speed (ms) | Text Search |
-|---|---|---|---|---|---|---|
-| OpenCLIP | 94.0% | 62.0% | 97.0% | 95.0% | 52.2 | ✅ |
-| **SigLIP** ✅ | **97.0%** | **65.6%** | **98.0%** | **97.5%** | **89.9** | ✅ |
-| DINOv2 | 91.0% | 70.8% | 100.0% | 94.75% | 119.4 | ❌ |
-| BLIP-2 | 98.0% | 73.0% | 100.0% | 98.75% | 7167.7 | ✅ |
-
-**SigLIP selected** — 97% Precision@1 with only 89.9ms latency. BLIP-2 achieves marginally higher accuracy but is **79× slower**, making it impractical for real-time use. DINOv2 has no text encoder, ruling out text queries.
-
-### Model Upgrade 
-
-Evaluated **SigLIP 2** (Google DeepMind, Feb 2025) — same ViT-B/16 architecture, improved training recipe (captioning + self-distillation + masked prediction).
-
-| Model | P@1 | R@5 | MRR | Speed (ms) | Text |
-|---|---|---|---|---|---|
-| SigLIP (baseline) | 33.33% | 83.33% | 53.68% | 21.6 | English |
-| **SigLIP 2** ✅ | **50.00%** | **91.67%** | **67.86%** | **22.0** | **Multilingual** |
-
-**SigLIP 2 selected for Semester 2** — 50% relative improvement in P@1, nearly identical inference speed, and multilingual text support at no extra cost.
-
-### How the AI Pipeline Works
-
-```
-User Query (image or text)
-        ↓
-SigLIP 2 Encoder (google/siglip2-base-patch16-224)
-        ↓
-768-dimensional L2-normalized embedding
-        ↓
-FAISS IndexFlatIP (exact cosine similarity search)
-        ↓
-Top-K matches with confidence labels (High / Medium / Low)
+```text
+User submits an image or text description
+                    |
+                    v
+        Vision-language model encoder
+                    |
+                    v
+       Normalized feature embedding
+                    |
+                    v
+          FAISS similarity search
+                    |
+                    v
+       Ranked candidate item records
+                    |
+                    v
+       User reviews possible matches
 ```
 
-- **Image query** → `SiglipModel.get_image_features()` 
-- **Text query** → `SiglipModel.get_text_features()` — same embedding space, enabling cross-modal retrieval
-- **FAISS** stores all found-item embeddings; new items are indexed in real time on upload
+The actual model performance depends on the dataset, evaluation method, hardware, and deployment environment.
 
----
+**Benchmark note:** Accuracy and latency figures should be included only after verification against this project's own experiments.
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Frontend Layer                     │
-│         React.js / Vite / Vanilla CSS               │
-│   Search Lost │ Report Found │ All Items │ Admin     │
-└──────────────────────┬──────────────────────────────┘
-                       │ REST API calls
-┌──────────────────────▼──────────────────────────────┐
-│                 Backend API Layer                    │
-│                FastAPI (Python)                      │
-│  POST /report-found │ POST /search-lost │ GET /all-found  │
-└──────────────────────┬──────────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────────┐
-│                  ML Engine Layer                     │
-│   SigLIP 2  →  768-dim embeddings  →  FAISS index   │
-└──────────────────────┬──────────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────────┐
-│                  Storage Layer                       │
-│     found_items/ (images) │ metadata.json │ .index   │
-└─────────────────────────────────────────────────────┘
-```
+The application is organized into four major layers:
 
----
+1. **Frontend Layer:** Interface for searching, reporting, and managing items.
+2. **Backend Layer:** Handles API requests, validation, and application logic.
+3. **AI Engine Layer:** Generates embeddings and ranks matching items.
+4. **Storage Layer:** Stores item images, metadata, and search indexes.
 
 ## 📁 Project Structure
 
-```
+```text
 campus-lost-found/
-├── backend/                          # Python FastAPI backend
-│   ├── main.py                       # FastAPI application
-│   ├── matcher_siglip.py            # SigLIP2 AI matching engine
-│   ├── storage_manager.py           # Cloud storage integration
-│   ├── requirements.txt             # Python dependencies
-│   ├── Dockerfile                   # Docker configuration
-│   ├── dataset/                     # Benchmark dataset
-│   ├── found_items/                 # Logged found item images
-│   ├── lost_items/                  # Lost item search query images
-│   ├── metadata.json                # Item metadata store
-│   └── users.json                   # User account database (flat file)
+├── backend/
+│   ├── main.py
+│   ├── matcher_siglip.py
+│   ├── storage_manager.py
+│   ├── requirements.txt
+│   └── Dockerfile
 │
-├── frontend/                         # React.js SPA frontend
-│   ├── index.html                   # HTML template & CDN configurations
-│   ├── package.json                 # Node dependencies
-│   ├── vite.config.js               # Vite environment config & dev proxies
-│   ├── src/
-│   │   ├── main.jsx                 # Entry point
-│   │   ├── App.jsx                  # Main router definitions
-│   │   ├── App.css                  # Core CSS design variables and overrides
-│   │   ├── index.css                # Global body parameters
-│   │   ├── api/
-│   │   │   └── apiClient.js         # API fetch interceptor and wrappers
-│   │   ├── components/
-│   │   │   ├── Header.jsx           # Global sticky top header
-│   │   │   ├── ProtectedRoute.jsx   # Role checks safety gate
-│   │   │   ├── ItemCard.jsx         # Card component with image fit
-│   │   │   ├── ReportForm.jsx       # Intake logging form
-│   │   │   ├── SearchBar.jsx        # Multimodal AI search bar
-│   │   │   └── Sidebar.jsx          # Bottom bar navigation for Admin
-│   │   └── pages/
-│   │       ├── Home.jsx             # Student dashboard (floating report + nav)
-│   │       ├── Guard.jsx            # Security staff portal (intake + claims)
-│   │       ├── Admin.jsx            # Control panel (resolution + analytics)
-│   │       └── Login.jsx            # Glassmorphic authentication page
-│   └── dist/                        # Compiled production assets
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.js
+│   └── src/
 │
-├── README.md                         # This file
-├── .gitignore                        # Git ignore specifications
-└── Smart_Lost_and_Found_Report.pdf  # Project BTP thesis report
+├── README.md
+└── .gitignore
 ```
 
----
+*This is an indicative structure. Refer to the actual source files for the current implementation.*
 
-## ⚡ Quick Start
+## ⚡ Local Setup
+
+### Prerequisites
+
+- Python 3.10+
+- Node.js and npm
+- Git
+- Docker (optional)
 
 ### 1. Backend Setup
 
 ```bash
-# Navigate to backend
 cd backend
+python -m venv .venv
+```
 
-# Install python packages
+Activate the virtual environment.
+
+**Windows PowerShell:**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
-# Start the uvicorn API server
+Start the backend:
+
+```bash
 python main.py
 ```
-The FastAPI server will boot up and host on `http://localhost:7860`.
+
+Use the host and port printed in the application logs.
 
 ### 2. Frontend Setup
 
+Open another terminal:
+
 ```bash
-# Navigate to frontend
 cd frontend
-
-# Install Node modules
 npm install
-
-# Run the local development server (Vite)
 npm run dev
 ```
-Vite will boot the dev server on `http://localhost:5173`. Proxies configured in `vite.config.js` will automatically redirect API calls to the Python backend on port `7860`.
 
-To build the static assets for production:
+Open the Vite development URL displayed in your terminal, commonly:
+
+```text
+http://localhost:5173
+```
+
+Build for production:
+
 ```bash
 npm run build
 ```
 
----
+*Follow the actual project configuration if its entry points, scripts, or ports differ.*
 
-## 📊 Performance Metrics
+## 🐳 Docker
 
-| Metric | Value |
-|--------|-------|
-| AI Matching Accuracy | 92% (Precision@1) |
-| Search Response Time | <100ms |
-| Speed Advantage vs BLIP-2 | 79× faster |
-| Supported Categories | 20+ item types |
+Docker configuration is included according to the project documentation.
 
----
+Use the Dockerfile and deployment configuration to build and run the application. Never commit passwords, API keys, or other secrets.
 
-## 👥 Team
+## 👨‍💻 Developer Information
 
-**B.Tech Project** — IIIT-Delhi
+| Field | Details |
+|---|---|
+| Project Name | Smart Campus Lost & Found System |
+| Developer | Maheswar Sahoo |
+| Branch | Computer Science & Engineering (CSE) |
+| Institution | Bhadrak Institute of Engineering and Technology (BIET), Odisha |
+| GitHub Username | M-sahoo2007 |
+| Repository | [campus-lost-found](https://github.com/M-sahoo2007/campus-lost-found) |
 
-* **Shivam** (Roll No: 2023504) - IIIT Delhi
-* **Utkarsh Mishra** (Roll No: 2023571) - IIIT Delhi
+## 🤝 Contributing
 
-**Advisor:** Dr. Anuj Grover, Dept. of Electronics and Communications Engineering, IIIT-Delhi
+Contributions, bug reports, and suggestions are welcome.
 
----
+Please open an issue describing the problem or proposed improvement before submitting substantial changes.
 
 ## 📄 License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+No license has been confirmed in this repository. Add a LICENSE file and update this section once the project license has been selected.
