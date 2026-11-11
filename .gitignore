@@ -1,152 +1,40 @@
-# # IDE
-# .vscode/
-# .idea/
-# *.swp
-# *.swo
-# *~
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# # OS
-# .DS_Store
-# Thumbs.db
+# OS
+.DS_Store
+Thumbs.db
 
-# # Python
-# __pycache__/
-# *.pyc
-# *.pyo
-# *.egg-info/
-# .Python
-# env/
-# venv/
-# .venv
-
-# # Node modules
-# node_modules/
-# package-lock.json
-
-# # Environment
-# .env
-# .env.local
-
-# # Logs
-# *.log
-
-# # Build
-# dist/
-# build/
-
-# # IDE Project Files
-# *.code-workspace
-
-
-# ==========================================
-# MISSING PERSON IDENTIFICATION SYSTEM
-# Developer: Maheswar Sahoo
-# GitHub: M-sahoo2007
-# ==========================================
-
-# Python cache
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
 *.pyo
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Python build files
-build/
-dist/
 *.egg-info/
-.eggs/
-wheels/
+.Python
+env/
+venv/
+.venv
 
-# Environment variables and secrets
+# Node modules
+node_modules/
+package-lock.json
+
+# Environment
 .env
-.env.*
-!.env.example
-secrets.toml
-.streamlit/secrets.toml
-login_config.yml
-login_config.yaml
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-*.db-journal
-
-# User uploaded/generated images
-resources/*
-!resources/.gitkeep
-
-# Demo datasets and generated data
-scripts/bulk_data/
-dataset/
-datasets/
-uploads/
-temp/
-tmp/
-
-# Machine learning model files
-*.pt
-*.pth
-*.onnx
-*.h5
-*.pkl
-*.joblib
-*.tflite
-*.task
-
-# Model caches
-.cache/
-.cache/huggingface/
-huggingface_cache/
-models/cache/
+.env.local
 
 # Logs
 *.log
-logs/
-pip-log.txt
 
-# Jupyter Notebook
-.ipynb_checkpoints/
+# Build
+dist/
+build/
 
-# Testing and coverage
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-
-# Streamlit
-.streamlit/config.toml
-
-# Node.js (if used)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# IDE and editors
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
-# Operating system
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Backup files
-*.bak
-*.tmp
-*.swp
-*~
-
+# IDE Project Files
+*.code-workspace
 
 README copy.md
