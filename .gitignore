@@ -1,38 +1,152 @@
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# # IDE
+# .vscode/
+# .idea/
+# *.swp
+# *.swo
+# *~
 
-# OS
-.DS_Store
-Thumbs.db
+# # OS
+# .DS_Store
+# Thumbs.db
 
-# Python
+# # Python
+# __pycache__/
+# *.pyc
+# *.pyo
+# *.egg-info/
+# .Python
+# env/
+# venv/
+# .venv
+
+# # Node modules
+# node_modules/
+# package-lock.json
+
+# # Environment
+# .env
+# .env.local
+
+# # Logs
+# *.log
+
+# # Build
+# dist/
+# build/
+
+# # IDE Project Files
+# *.code-workspace
+
+
+# ==========================================
+# MISSING PERSON IDENTIFICATION SYSTEM
+# Developer: Maheswar Sahoo
+# GitHub: M-sahoo2007
+# ==========================================
+
+# Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 *.pyo
-*.egg-info/
-.Python
-env/
+
+# Virtual environments
+.venv/
 venv/
-.venv
+env/
+ENV/
 
-# Node modules
-node_modules/
-package-lock.json
+# Python build files
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
 
-# Environment
+# Environment variables and secrets
 .env
-.env.local
+.env.*
+!.env.example
+secrets.toml
+.streamlit/secrets.toml
+login_config.yml
+login_config.yaml
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# User uploaded/generated images
+resources/*
+!resources/.gitkeep
+
+# Demo datasets and generated data
+scripts/bulk_data/
+dataset/
+datasets/
+uploads/
+temp/
+tmp/
+
+# Machine learning model files
+*.pt
+*.pth
+*.onnx
+*.h5
+*.pkl
+*.joblib
+*.tflite
+*.task
+
+# Model caches
+.cache/
+.cache/huggingface/
+huggingface_cache/
+models/cache/
 
 # Logs
 *.log
+logs/
+pip-log.txt
 
-# Build
-dist/
-build/
+# Jupyter Notebook
+.ipynb_checkpoints/
 
-# IDE Project Files
-*.code-workspace
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Streamlit
+.streamlit/config.toml
+
+# Node.js (if used)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# IDE and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Operating system
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.tmp
+*.swp
+*~
+
+
+README copy.md
